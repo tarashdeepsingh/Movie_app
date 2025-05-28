@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import "./App.css";
@@ -11,7 +11,15 @@ function App() {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [listening, setListening] = useState(false);
+  const [theme, setTheme] = useState("dark");
 
+  // Update body class for theme
+  useEffect(() => {
+    document.body.className = theme === "light" ? "light-mode" : "";
+  }, [theme]);
+
+  // Debounced search function
   const debouncedSearchMovies = useCallback(
     debounce(async (query) => {
       if (!query) return;
@@ -40,6 +48,53 @@ function App() {
     []
   );
 
+  // Speech Recognition setup
+  const recognition = useMemo(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+    const recog = new SpeechRecognition();
+    recog.continuous = false;
+    recog.interimResults = false;
+    recog.lang = "en-US";
+
+    recog.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchTerm(transcript);
+      debouncedSearchMovies(transcript);
+    };
+
+    recog.onerror = (event) => {
+      console.error(event.error);
+      setError("Speech recognition error");
+      setListening(false);
+    };
+
+    recog.onend = () => {
+      setListening(false);
+    };
+
+    return recog;
+  }, [debouncedSearchMovies]);
+
+  const handleVoiceClick = () => {
+    if (!recognition) {
+      setError("Speech recognition not supported in this browser");
+      return;
+    }
+    if (listening) {
+      recognition.stop();
+    } else {
+      setError("");
+      setListening(true);
+      recognition.start();
+    }
+  };
+
+  useEffect(() => {
+    // Load default movies on initial render (simulate trending)
+    debouncedSearchMovies("Avengers");
+  }, [debouncedSearchMovies]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -47,7 +102,7 @@ function App() {
   };
 
   const searchMovies = () => {
-    debouncedSearchMovies.cancel(); // Cancel debounce before immediate search
+    debouncedSearchMovies.cancel();
     debouncedSearchMovies(searchTerm);
   };
 
@@ -64,7 +119,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>Movie Search App</h1>
+      <div className="top-bar">
+        <h1>Movie Search App</h1>
+        <button onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="theme-toggle">
+          {theme === "light" ? "🔆 Dark Mode" : "🌙 Light Mode"}
+        </button>
+      </div>
+
       <div className="search-bar">
         <input
           type="text"
@@ -74,10 +135,17 @@ function App() {
           onKeyDown={(e) => e.key === "Enter" && searchMovies()}
         />
         <button onClick={searchMovies}>Search</button>
+        <button onClick={handleVoiceClick} className="voice-button">
+          {listening ? "🔴 Stop" : "🎤 Speak"}
+        </button>
       </div>
 
       {loading && <p>Loading...</p>}
       {error && <p className="error-text">{error}</p>}
+
+      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
+        {searchTerm ? "Search Results" : "Trending Movies"}
+      </h2>
 
       <div className="content-wrapper">
         <div className="movie-list">

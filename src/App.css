@@ -6,16 +6,41 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+body.light-mode {
+  background-color: #ffffff;
+  color: #333333;
+}
+
 .app-container {
   max-width: 960px;
   margin: 0 auto;
   padding: 40px 20px;
 }
 
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.theme-toggle {
+  padding: 8px 12px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background-color: #e68900;
+}
+
 h1 {
-  text-align: center;
+  margin: 0;
   color: #ff9800;
-  margin-bottom: 30px;
 }
 
 .search-bar {
@@ -66,9 +91,17 @@ button:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+body.light-mode .movie-card {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 .movie-card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+body.light-mode .movie-card:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
 }
 
 .movie-card img {
@@ -123,7 +156,6 @@ button:hover {
     width: 100%;
   }
 }
-
 
 .content-wrapper {
   display: flex;
